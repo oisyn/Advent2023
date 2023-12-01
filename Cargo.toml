@@ -1,0 +1,16 @@
+[workspace.package]
+version = "0.1.0"
+authors = ["Sylvester Hesp <github@oisyn.nl>"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/oisyn/Advent2023"
+
+[workspace]
+resolver = "2"
+members = [
+    "day1"
+]
+
+[workspace.dependencies]
+anyhow = "1.0.75"
+
