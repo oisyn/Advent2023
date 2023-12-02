@@ -15,15 +15,15 @@ impl FromParser for Color {
     fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
         match parser.peek_char() {
             Some(b'r') => {
-                parser.skip("red".len());
+                parser.expect("red");
                 Some(Self::Red)
             }
             Some(b'g') => {
-                parser.skip("green".len());
+                parser.expect("green");
                 Some(Self::Green)
             }
             Some(b'b') => {
-                parser.skip("blue".len());
+                parser.expect("blue");
                 Some(Self::Blue)
             }
             _ => None,
@@ -44,15 +44,15 @@ fn main() -> Result<()> {
         let l = l?;
         let mut p = Parser::new(&l);
 
-        p.skip("Game ".len());
+        p.expect("Game ");
         let game: i32 = p.parse().unwrap();
-        p.skip(": ".len());
+        p.expect(": ");
 
         let mut max_cubes = [0, 0, 0];
         let mut ok1 = true;
         while !p.at_end() {
             let num: i32 = p.parse().unwrap();
-            let color: Color = p.skip(1).parse().unwrap();
+            let color: Color = p.expect(" ").parse().unwrap();
             let color = color as usize;
 
             ok1 &= num <= MAX_CUBES[color];

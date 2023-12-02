@@ -11,3 +11,6 @@ repository.workspace = true
 [dependencies]
 util.workspace = true
 anyhow.workspace = true
+
+[features]
+validation = ["util/validation"]

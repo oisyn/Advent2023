@@ -20,6 +20,21 @@ impl<'a> Parser<'a> {
         self
     }
 
+    pub fn expect(&mut self, s: &str) -> &mut Self {
+        #[cfg(feature = "validation")]
+        {
+            let c = self.take(s.len());
+            if c != s {
+                panic!("Validation failed! Parser expected `{s}`, got `{c}`");
+            }
+        }
+
+        #[cfg(not(feature = "validation"))]
+        self.skip(s.len());
+
+        self
+    }
+
     pub fn peek_char(&self) -> Option<u8> {
         if self.buf.is_empty() {
             None
