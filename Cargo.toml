@@ -8,9 +8,11 @@ repository = "https://github.com/oisyn/Advent2023"
 [workspace]
 resolver = "2"
 members = [
-    "day1"
+    "day1",
+    "day2",
+    "util",
 ]
 
 [workspace.dependencies]
 anyhow = "1.0.75"
-
+util = { version = "0.1.0", path = "util" }
