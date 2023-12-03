@@ -1,6 +1,4 @@
 use anyhow::Result;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 use util::*;
 
 enum Color {
@@ -30,17 +28,15 @@ impl FromParser for Color {
 }
 
 fn main() -> Result<()> {
-    let f = File::open("day2/data/input.txt")?;
-    let f = BufReader::new(f);
+    let input = open_input("day2")?;
 
     const MAX_CUBES: [i32; 3] = [12, 13, 14];
 
     let mut total1 = 0;
     let mut total2 = 0;
 
-    for l in f.lines() {
-        let l = l?;
-        let mut p = Parser::new(&l);
+    for l in input.lines() {
+        let mut p = Parser::new(l);
 
         p.expect("Game ");
         let game: i32 = p.parse().unwrap();

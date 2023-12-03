@@ -1,6 +1,5 @@
 use anyhow::Result;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use util::*;
 
 const FIND: &[&str] = &[
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
@@ -42,18 +41,16 @@ fn find_last_digit(s: &str) -> i32 {
 }
 
 fn main() -> Result<()> {
-    let f = File::open("day1/data/input.txt")?;
-    let f = BufReader::new(f);
+    let input = open_input("day1")?;
 
     let mut total1 = 0;
     let mut total2 = 0;
 
-    for l in f.lines() {
-        let l = l?;
+    for l in input.lines() {
         let b = l.as_bytes();
 
-        let i0 = b.iter().find(|&&c| c >= b'0' && c <= b'9');
-        let i1 = b.iter().rev().find(|&&c| c >= b'0' && c <= b'9');
+        let i0 = b.iter().find(|c| c.is_ascii_digit());
+        let i1 = b.iter().rev().find(|c| c.is_ascii_digit());
         if let (Some(i0), Some(i1)) = (i0, i1) {
             let value = (i0 - b'0') as i32 * 10 + (i1 - b'0') as i32;
             total1 += value;
