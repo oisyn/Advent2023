@@ -45,7 +45,6 @@ fn main() -> Result<()> {
         p.expect("Game ");
         let game: i32 = p.parse().unwrap();
         p.expect(": ");
-
         let mut max_cubes = [0, 0, 0];
         let mut ok1 = true;
         while !p.at_end() {

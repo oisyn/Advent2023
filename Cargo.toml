@@ -10,9 +10,11 @@ resolver = "2"
 members = [
     "day1",
     "day2",
+    "day3",
     "util",
 ]
 
 [workspace.dependencies]
 anyhow = "1.0.75"
+memmap = "0.7.0"
 util = { version = "0.1.0", path = "util" }
