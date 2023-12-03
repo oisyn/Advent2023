@@ -52,7 +52,7 @@ fn main() -> Result<()> {
             let end = y_offset + x;
             x += 1;
 
-            let r = safe_range(
+            let mut r = safe_range(
                 data,
                 start.wrapping_sub(stride + 1),
                 end.wrapping_sub(stride - 1),
@@ -62,19 +62,22 @@ fn main() -> Result<()> {
             .chain(safe_range(data, end, end + 1))
             .chain(safe_range(data, start + stride - 1, end + stride + 1));
 
-            let mut num = 0;
-            if r.clone()
-                .find(|&&c| c != b'.' && c != b'\n' && c != b'\r' && !c.is_ascii_digit())
-                .is_some()
+            if let Some(c) =
+                r.find(|&&c| c != b'.' && c != b'\n' && c != b'\r' && !c.is_ascii_digit())
             {
-                num = to_str(&data[start..end]).parse::<i32>().unwrap();
+                let num = to_str(&data[start..end]).parse::<i32>().unwrap();
                 total1 += num;
-            }
 
-            for gear in r.filter(|&&c| c == b'*') {
-                if let Some(old) = gear_map.insert(gear as *const u8, num) {
-                    total2 += old * num;
+                let mut process = |gear| {
+                    if let Some(old) = gear_map.insert(gear as *const u8, num) {
+                        total2 += old * num;
+                    }
+                };
+
+                if *c == b'*' {
+                    process(c);
                 }
+                r.filter(|&&c| c == b'*').for_each(process);
             }
         }
         y_offset += stride;
