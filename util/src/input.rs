@@ -12,17 +12,25 @@ impl Input {
     pub fn lines(&self) -> Lines {
         Lines(self.as_ref())
     }
+
+    pub fn bytes(&self) -> &[u8] {
+        &self.0
+    }
+
+    pub fn str(&self) -> &str {
+        to_str(&self.0)
+    }
 }
 
 impl AsRef<[u8]> for Input {
     fn as_ref(&self) -> &[u8] {
-        &self.0
+        self.bytes()
     }
 }
 
 impl AsRef<str> for Input {
     fn as_ref(&self) -> &str {
-        to_str(self.as_ref())
+        to_str(self.bytes())
     }
 }
 

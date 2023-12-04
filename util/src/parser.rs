@@ -77,6 +77,18 @@ impl<'a> Parser<'a> {
         self.take(len)
     }
 
+    pub fn remainder(&mut self) -> &'a str {
+        let r = to_str(self.buf);
+        self.buf = &self.buf[self.buf.len()..];
+        r
+    }
+
+    pub fn consume<T>(&mut self, f: impl FnOnce(&[u8]) -> (usize, T)) -> T {
+        let (len, r) = f(self.buf);
+        self.skip(len);
+        r
+    }
+
     pub fn parse<T: FromParser>(&mut self) -> Option<T> {
         <T as FromParser>::parse_from(self)
     }
