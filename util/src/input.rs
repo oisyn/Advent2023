@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub struct Input(Mmap);
+pub struct Input(Mmap, std::time::Instant);
 
 impl Input {
     pub fn lines(&self) -> Lines {
@@ -31,6 +31,14 @@ impl AsRef<[u8]> for Input {
 impl AsRef<str> for Input {
     fn as_ref(&self) -> &str {
         to_str(self.bytes())
+    }
+}
+
+impl Drop for Input {
+    fn drop(&mut self) {
+        let n = std::time::Instant::now();
+        let d = n - self.1;
+        println!("Time spent: {:.1}µs", d.as_nanos() as f32 / 1000.0)
     }
 }
 
@@ -77,6 +85,7 @@ fn get_input_path(day: &str) -> Result<PathBuf> {
 }
 
 pub fn open_input(day: &str) -> Result<Input> {
+    let t = std::time::Instant::now();
     let path = get_input_path(day)?;
     let file = File::open(path)?;
     let mmap = unsafe { Mmap::map(&file)? };
@@ -86,5 +95,5 @@ pub fn open_input(day: &str) -> Result<Input> {
         bail!("Input contains non-ascii data");
     }
 
-    Ok(Input(mmap))
+    Ok(Input(mmap, t))
 }

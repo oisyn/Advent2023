@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use anyhow::Result;
 use util::*;
 
@@ -13,7 +15,8 @@ fn main() -> Result<()> {
     let mut total1 = 0;
     let mut total2 = 0;
 
-    let mut copies: Vec<(i32, i32)> = Vec::with_capacity(1000);
+    let mut copies = VecDeque::with_capacity(1000);
+    copies.push_back(1);
 
     for l in input.lines() {
         let mut winning = 0_u128;
@@ -30,17 +33,21 @@ fn main() -> Result<()> {
             }
         }
 
-        let mut num_copies = 1;
-        copies.retain_mut(|(c, n)| {
-            num_copies += *c;
-            *n -= 1;
-            *n > 0
-        });
+        let num_copies = copies.pop_front().unwrap();
         total2 += num_copies;
+
+        let len = match num_winning {
+            0 => 1,
+            _ => num_winning,
+        };
+
+        copies.resize(copies.len().max(len as usize), 1);
 
         if num_winning > 0 {
             total1 += 1 << (num_winning - 1);
-            copies.push((num_copies, num_winning));
+            for n in copies.iter_mut().take(num_winning) {
+                *n += num_copies;
+            }
         }
     }
 
