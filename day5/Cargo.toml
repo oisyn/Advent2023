@@ -11,3 +11,8 @@ repository.workspace = true
 [dependencies]
 util.workspace = true
 anyhow.workspace = true
+
+[features]
+validation = ["util/validation"]
+u64 = []
+allow_overlaps = []

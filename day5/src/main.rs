@@ -1,6 +1,14 @@
 use anyhow::Result;
 use util::*;
 
+#[cfg(feature = "u64")]
+#[allow(non_camel_case_types)]
+type utype = u64;
+
+#[cfg(not(feature = "u64"))]
+#[allow(non_camel_case_types)]
+type utype = u32;
+
 fn main() -> Result<()> {
     let input = open_input("day5")?;
     let mut lines = input.lines().peekable();
@@ -9,7 +17,7 @@ fn main() -> Result<()> {
     let mut p = Parser::new(lines.next().unwrap());
     p.expect("seeds: ");
     while p.peek_char().is_some_and(|c| c.is_ascii_digit()) {
-        let seed: u32 = p.parse().unwrap();
+        let seed: utype = p.parse().unwrap();
         seeds.push(seed);
         p.skip(1);
     }
@@ -19,7 +27,7 @@ fn main() -> Result<()> {
         .map(|c| (c[0], c[0] + (c[1] - 1)))
         .collect::<Vec<_>>();
 
-    let mut remapped = vec![0_u32; seeds.len()];
+    let mut remapped = vec![0 as utype; seeds.len()];
     let mut remapped_ranges = Vec::new();
 
     for _ in 0..7 {
@@ -30,11 +38,11 @@ fn main() -> Result<()> {
 
         while lines.peek().is_some_and(|l| !l.is_empty()) {
             let mut p = Parser::new(lines.next().unwrap());
-            let dest: u32 = p.parse().unwrap();
+            let dest: utype = p.parse().unwrap();
             p.expect(" ");
-            let from: u32 = p.parse().unwrap();
+            let from: utype = p.parse().unwrap();
             p.expect(" ");
-            let count = p.parse::<u32>().unwrap() - 1;
+            let count = p.parse::<utype>().unwrap() - 1;
             let to = from + count;
             let dest_to = dest + count;
             let diff = dest.wrapping_sub(from);
@@ -69,10 +77,29 @@ fn main() -> Result<()> {
             })
         }
 
-        remapped_ranges.append(&mut seed_ranges);
+        seed_ranges.append(&mut remapped_ranges);
+
+        #[cfg(feature = "allow_overlaps")]
+        {
+            (seed_ranges, remapped_ranges) = (remapped_ranges, seed_ranges);
+            seed_ranges.clear();
+            for &(mut r) in &remapped_ranges {
+                seed_ranges.retain(|o| {
+                    if o.0 <= r.1 && o.1 >= r.0 {
+                        r.0 = r.0.min(o.0);
+                        r.1 = r.1.max(o.1);
+                        false
+                    } else {
+                        true
+                    }
+                });
+                seed_ranges.push(r);
+            }
+
+            remapped_ranges.clear();
+        }
 
         (seeds, remapped) = (remapped, seeds);
-        (seed_ranges, remapped_ranges) = (remapped_ranges, seed_ranges);
     }
 
     let part1 = seeds.into_iter().min().unwrap();
