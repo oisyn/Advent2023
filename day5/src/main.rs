@@ -29,6 +29,7 @@ fn main() -> Result<()> {
 
     let mut remapped = vec![0 as utype; seeds.len()];
     let mut remapped_ranges = Vec::new();
+    let mut leftover_ranges = Vec::new();
 
     for _ in 0..7 {
         lines.next();
@@ -70,11 +71,18 @@ fn main() -> Result<()> {
                     r.0 = to + 1;
                     return true;
                 }
+                if r.1 > to {
+                    // middle part of the range is remapped
+                    remapped_ranges.push((dest, dest_to));
+                    leftover_ranges.push((to + 1, r.1));
+                    r.1 = from - 1;
+                }
                 // second part (r.0 is out, r.1 is in)
                 remapped_ranges.push((dest, r.1.wrapping_add(diff)));
                 r.1 = from - 1;
                 return true;
-            })
+            });
+            seed_ranges.append(&mut leftover_ranges);
         }
 
         seed_ranges.append(&mut remapped_ranges);
