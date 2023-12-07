@@ -48,64 +48,36 @@ const fn gen_table_j() -> [u8; 256] {
 const CARD_TABLE: [u8; 256] = gen_table();
 const CARD_TABLE_J: [u8; 256] = gen_table_j();
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-enum Category {
-    HighCard = 0,
-    Pair = 1,
-    TwoPair = 2,
-    ThreeOfAKind = 3,
-    FullHouse = 4,
-    FourOfAKind = 5,
-    FiveOfAKind = 6,
-}
+fn parse_ranks(parser: &mut Parser) -> (u32, u32) {
+    let b = parser.take(5).as_bytes();
+    let mut counts = [0; 13];
+    let mut value = 0;
+    let mut catvalue = 0;
+    let mut countsj = [0; 13];
+    let mut maxcountj = 0;
+    let mut valuej = 0;
+    let mut catvaluej = 0;
+    for i in 0..5 {
+        let c = CARD_TABLE[b[i] as usize];
+        counts[c as usize] += 1;
+        catvalue += counts[c as usize];
+        value = value * 13 + c as u32;
 
-struct JokeredRanks(u32, u32);
-
-impl FromParser for JokeredRanks {
-    fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
-        let b = parser.take(5).as_bytes();
-        let mut counts = [0; 13];
-        let mut value = 0;
-        let mut countsj = [0; 13];
-        let mut valuej = 0;
-        for i in 0..5 {
-            let c = CARD_TABLE[b[i] as usize];
-            counts[c as usize] += 1;
-            value = value * 13 + c as u32;
-
-            let c = CARD_TABLE_J[b[i] as usize];
-            countsj[c as usize] += 1;
-            valuej = valuej * 13 + c as u32;
+        let c = CARD_TABLE_J[b[i] as usize];
+        countsj[c as usize] += 1;
+        catvaluej += countsj[c as usize];
+        if c > 0 {
+            maxcountj = maxcountj.max(countsj[c as usize]);
         }
-
-        counts.select_nth_unstable_by(1, |a, b| b.cmp(a));
-        countsj[1..].select_nth_unstable_by(1, |a, b| b.cmp(a));
-
-        let cat = match (counts[0], counts[1]) {
-            (5, _) => Category::FiveOfAKind,
-            (4, _) => Category::FourOfAKind,
-            (3, 2) => Category::FullHouse,
-            (3, _) => Category::ThreeOfAKind,
-            (2, 2) => Category::TwoPair,
-            (2, _) => Category::Pair,
-            _ => Category::HighCard,
-        };
-
-        let catj = match (countsj[0] + countsj[1], countsj[2]) {
-            (5, _) => Category::FiveOfAKind,
-            (4, _) => Category::FourOfAKind,
-            (3, 2) => Category::FullHouse,
-            (3, _) => Category::ThreeOfAKind,
-            (2, 2) => Category::TwoPair,
-            (2, _) => Category::Pair,
-            _ => Category::HighCard,
-        };
-
-        Some(Self(
-            cat as u32 * 371293 + value,
-            catj as u32 * 371293 + valuej,
-        ))
+        valuej = valuej * 13 + c as u32;
     }
+
+    catvaluej += countsj[0] * maxcountj;
+
+    (
+        catvalue as u32 * 371293 + value,
+        catvaluej as u32 * 371293 + valuej,
+    )
 }
 
 fn main() -> Result<()> {
@@ -115,7 +87,7 @@ fn main() -> Result<()> {
 
     for l in input.lines() {
         let mut p = Parser::new(l);
-        let h: JokeredRanks = p.parse().unwrap();
+        let h = parse_ranks(&mut p);
         p.expect(" ");
         let v: utype = p.parse().unwrap();
         hands.push((h.0, v));
