@@ -59,12 +59,9 @@ enum Category {
     FiveOfAKind = 6,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-struct Hand(Category, utype);
+struct JokeredRanks(u32, u32);
 
-struct JokeredHands(Hand, Hand);
-
-impl FromParser for JokeredHands {
+impl FromParser for JokeredRanks {
     fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
         let b = parser.take(5).as_bytes();
         let mut counts = [0; 13];
@@ -74,11 +71,11 @@ impl FromParser for JokeredHands {
         for i in 0..5 {
             let c = CARD_TABLE[b[i] as usize];
             counts[c as usize] += 1;
-            value = value * 13 + c as utype;
+            value = value * 13 + c as u32;
 
             let c = CARD_TABLE_J[b[i] as usize];
             countsj[c as usize] += 1;
-            valuej = valuej * 13 + c as utype;
+            valuej = valuej * 13 + c as u32;
         }
 
         counts.select_nth_unstable_by(1, |a, b| b.cmp(a));
@@ -104,7 +101,10 @@ impl FromParser for JokeredHands {
             _ => Category::HighCard,
         };
 
-        Some(Self(Hand(cat, value), Hand(catj, valuej)))
+        Some(Self(
+            cat as u32 * 371293 + value,
+            catj as u32 * 371293 + valuej,
+        ))
     }
 }
 
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
 
     for l in input.lines() {
         let mut p = Parser::new(l);
-        let h: JokeredHands = p.parse().unwrap();
+        let h: JokeredRanks = p.parse().unwrap();
         p.expect(" ");
         let v: utype = p.parse().unwrap();
         hands.push((h.0, v));
