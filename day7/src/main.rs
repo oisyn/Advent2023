@@ -1,6 +1,14 @@
 use anyhow::Result;
 use util::*;
 
+#[cfg(feature = "u64")]
+#[allow(non_camel_case_types)]
+type utype = u64;
+
+#[cfg(not(feature = "u64"))]
+#[allow(non_camel_case_types)]
+type utype = u32;
+
 const fn gen_table() -> [u8; 256] {
     let mut t = [0_u8; 256];
     t[b'2' as usize] = 0;
@@ -52,7 +60,7 @@ enum Category {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-struct Hand(Category, u32);
+struct Hand(Category, utype);
 
 struct JokeredHands(Hand, Hand);
 
@@ -66,15 +74,15 @@ impl FromParser for JokeredHands {
         for i in 0..5 {
             let c = CARD_TABLE[b[i] as usize];
             counts[c as usize] += 1;
-            value = value * 13 + c as u32;
+            value = value * 13 + c as utype;
 
             let c = CARD_TABLE_J[b[i] as usize];
             countsj[c as usize] += 1;
-            valuej = valuej * 13 + c as u32;
+            valuej = valuej * 13 + c as utype;
         }
 
-        counts.sort_unstable_by(|a, b| b.cmp(a));
-        countsj[1..].sort_unstable_by(|a, b| b.cmp(a));
+        counts.select_nth_unstable_by(1, |a, b| b.cmp(a));
+        countsj[1..].select_nth_unstable_by(1, |a, b| b.cmp(a));
 
         let cat = match (counts[0], counts[1]) {
             (5, _) => Category::FiveOfAKind,
@@ -109,7 +117,7 @@ fn main() -> Result<()> {
         let mut p = Parser::new(l);
         let h: JokeredHands = p.parse().unwrap();
         p.expect(" ");
-        let v: i32 = p.parse().unwrap();
+        let v: utype = p.parse().unwrap();
         hands.push((h.0, v));
         jhands.push((h.1, v));
     }
@@ -119,13 +127,13 @@ fn main() -> Result<()> {
     let total1 = hands
         .iter()
         .enumerate()
-        .fold(0_i32, |t, (h, v)| t + (h + 1) as i32 * v.1);
+        .fold(0 as utype, |t, (h, v)| t + (h + 1) as utype * v.1);
 
     jhands.sort_unstable();
     let total2 = jhands
         .iter()
         .enumerate()
-        .fold(0_i32, |t, (h, v)| t + (h + 1) as i32 * v.1);
+        .fold(0 as utype, |t, (h, v)| t + (h + 1) as utype * v.1);
 
     println!("{total1} {total2}");
 

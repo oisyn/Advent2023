@@ -14,3 +14,4 @@ anyhow.workspace = true
 
 [features]
 validation = ["util/validation"]
+u64 = []
