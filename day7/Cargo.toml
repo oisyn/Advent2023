@@ -1,0 +1,16 @@
+[package]
+name = "day7"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+util.workspace = true
+anyhow.workspace = true
+
+[features]
+validation = ["util/validation"]
