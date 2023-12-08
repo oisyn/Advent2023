@@ -15,10 +15,12 @@ members = [
     "day5",
     "day6",
     "day7",
+    "day8",
     "util",
 ]
 
 [workspace.dependencies]
 anyhow = "1.0.75"
 memmap = "0.7.0"
+itertools = "*"
 util = { version = "0.1.0", path = "util" }
