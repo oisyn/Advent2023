@@ -98,7 +98,7 @@ pub trait FromParser: Sized {
     fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self>;
 }
 
-macro_rules! impl_int_parser {
+macro_rules! impl_uint_parser {
     ($t:ty) => {
         impl FromParser for $t {
             fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
@@ -108,13 +108,36 @@ macro_rules! impl_int_parser {
     };
 }
 
-impl_int_parser!(i8);
-impl_int_parser!(u8);
-impl_int_parser!(i16);
-impl_int_parser!(u16);
-impl_int_parser!(i32);
-impl_int_parser!(u32);
-impl_int_parser!(i64);
-impl_int_parser!(u64);
-impl_int_parser!(isize);
-impl_int_parser!(usize);
+macro_rules! impl_sint_parser {
+    ($t:ty) => {
+        impl FromParser for $t {
+            fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
+                let neg = parser.peek_char()? == b'-';
+                if neg {
+                    parser.skip(1);
+                }
+                let n = parser
+                    .take_while(|c| c.is_ascii_digit())
+                    .parse::<$t>()
+                    .ok()?;
+                if neg {
+                    Some(-n)
+                } else {
+                    Some(n)
+                }
+            }
+        }
+    };
+}
+
+impl_uint_parser!(u8);
+impl_uint_parser!(u16);
+impl_uint_parser!(u32);
+impl_uint_parser!(u64);
+impl_uint_parser!(usize);
+
+impl_sint_parser!(i8);
+impl_sint_parser!(i16);
+impl_sint_parser!(i32);
+impl_sint_parser!(i64);
+impl_sint_parser!(isize);
