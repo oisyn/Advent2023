@@ -75,8 +75,8 @@ fn get_input_path(day: &str) -> Result<PathBuf> {
     let args = std::env::args().collect::<Vec<_>>();
     if args.len() < 2 {
         Ok(Path::new(day).join("data/input.txt"))
-    } else if args.len() == 2 && args[1] == "-e" {
-        Ok(Path::new(day).join("data/example.txt"))
+    } else if args.len() == 2 && args[1].starts_with("-e") {
+        Ok(Path::new(day).join(format!("data/example{}.txt", &args[1][2..])))
     } else if args.len() == 3 && args[1] == "-i" {
         Ok(PathBuf::from(&args[2]))
     } else {
