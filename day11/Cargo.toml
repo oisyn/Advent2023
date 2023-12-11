@@ -12,3 +12,6 @@ repository.workspace = true
 anyhow.workspace = true
 util.workspace = true
 itertools.workspace = true
+
+[features]
+u128 = []

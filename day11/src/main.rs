@@ -2,12 +2,20 @@ use anyhow::Result;
 use itertools::Itertools;
 use util::*;
 
+#[cfg(feature = "u128")]
+#[allow(non_camel_case_types)]
+type utype = u128;
+
+#[cfg(not(feature = "u128"))]
+#[allow(non_camel_case_types)]
+type utype = u64;
+
 fn main() -> Result<()> {
     let input = open_input("day11")?;
     let data = input.bytes();
-    let width = data.iter().position(|&b| b == b'\r' || b == b'\n').unwrap() as isize;
-    let stride = width + 1 + (data[width as usize + 1] == b'\n') as isize;
-    let height = (data.len() as isize + 2) / stride;
+    let width = data.iter().position(|&b| b == b'\r' || b == b'\n').unwrap() as utype;
+    let stride = width + 1 + (data[width as usize + 1] == b'\n') as utype;
+    let height = (data.len() as utype + 2) / stride;
 
     let mut x_adjust = Vec::with_capacity(100);
     let mut y_adjust = Vec::with_capacity(100);
@@ -29,14 +37,14 @@ fn main() -> Result<()> {
         }
     }
 
-    x_adjust.push(isize::MAX);
-    y_adjust.push(isize::MAX);
+    x_adjust.push(utype::MAX);
+    y_adjust.push(utype::MAX);
 
     let mut xs = Vec::with_capacity(1000);
     let mut ys = Vec::with_capacity(1000);
 
     for (x, y) in data.iter().filter(|b| **b == b'#').map(|b| {
-        let o = unsafe { (b as *const u8).offset_from(data.as_ptr()) };
+        let o = unsafe { (b as *const u8).offset_from(data.as_ptr()) } as utype;
         (o % stride, o / stride)
     }) {
         xs.push(x);
@@ -44,10 +52,10 @@ fn main() -> Result<()> {
     }
 
     xs.sort();
-    ys.sort();
+    // ys is already sorted
 
-    fn calc(coords: &[isize], adjusts: &[isize]) -> (isize, isize) {
-        const SIZE: isize = 999_999;
+    fn calc(coords: &[utype], adjusts: &[utype]) -> (utype, utype) {
+        const SIZE: utype = 999_999;
 
         let mut adjusts = adjusts.iter().copied().skip_while(|&a| a < coords[0]);
 
@@ -56,12 +64,12 @@ fn main() -> Result<()> {
         let num_spans = coords.len() - 1;
         for (idx, c) in coords.windows(2).enumerate() {
             let width = c[1] - c[0];
-            let adj = adjusts.take_while_ref(|&a| a < c[1]).count() as isize;
+            let adj = adjusts.take_while_ref(|&a| a < c[1]).count() as utype;
             if width == 0 {
                 continue;
             }
 
-            let num = ((idx + 1) * (num_spans - idx)) as isize;
+            let num = ((idx + 1) * (num_spans - idx)) as utype;
             total1 += (width + adj) * num;
             total2 += (width + adj * SIZE) * num;
         }
