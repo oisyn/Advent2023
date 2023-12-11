@@ -29,48 +29,50 @@ fn main() -> Result<()> {
         }
     }
 
-    struct Galaxy {
-        pos: (isize, isize),
-        adj: (isize, isize),
+    x_adjust.push(isize::MAX);
+    y_adjust.push(isize::MAX);
+
+    let mut xs = Vec::with_capacity(1000);
+    let mut ys = Vec::with_capacity(1000);
+
+    for (x, y) in data.iter().filter(|b| **b == b'#').map(|b| {
+        let o = unsafe { (b as *const u8).offset_from(data.as_ptr()) };
+        (o % stride, o / stride)
+    }) {
+        xs.push(x);
+        ys.push(y);
     }
 
-    impl Galaxy {
-        fn adjust(&self, factor: isize) -> (isize, isize) {
-            (
-                self.pos.0 + self.adj.0 * factor,
-                self.pos.1 + self.adj.1 * factor,
-            )
+    xs.sort();
+    ys.sort();
+
+    fn calc(coords: &[isize], adjusts: &[isize]) -> (isize, isize) {
+        const SIZE: isize = 999_999;
+
+        let mut adjusts = adjusts.iter().copied().skip_while(|&a| a < coords[0]);
+
+        let mut total1 = 0;
+        let mut total2 = 0;
+        let num_spans = coords.len() - 1;
+        for (idx, c) in coords.windows(2).enumerate() {
+            let width = c[1] - c[0];
+            let adj = adjusts.take_while_ref(|&a| a < c[1]).count() as isize;
+            if width == 0 {
+                continue;
+            }
+
+            let num = ((idx + 1) * (num_spans - idx)) as isize;
+            total1 += (width + adj) * num;
+            total2 += (width + adj * SIZE) * num;
         }
 
-        fn diff(&self, other: &Self, factor: isize) -> usize {
-            let a = self.adjust(factor);
-            let b = other.adjust(factor);
-            a.0.abs_diff(b.0) + a.1.abs_diff(b.1)
-        }
+        (total1, total2)
     }
 
-    let galaxies = data
-        .iter()
-        .filter(|b| **b == b'#')
-        .map(|b| {
-            let o = unsafe { (b as *const u8).offset_from(data.as_ptr()) };
-            let pos = (o % stride, o / stride);
-            let adj = (
-                x_adjust.binary_search(&pos.0).unwrap_err() as isize,
-                y_adjust.binary_search(&pos.1).unwrap_err() as isize,
-            );
-            Galaxy { pos, adj }
-        })
-        .collect_vec();
+    let (xtotal1, xtotal2) = calc(&xs, &x_adjust);
+    let (ytotal1, ytotal2) = calc(&ys, &y_adjust);
 
-    let mut total1 = 0;
-    let mut total2 = 0;
-    for i in 0..galaxies.len() - 1 {
-        for j in i + 1..galaxies.len() {
-            total1 += galaxies[i].diff(&galaxies[j], 1);
-            total2 += galaxies[i].diff(&galaxies[j], 999999);
-        }
-    }
+    let (total1, total2) = (xtotal1 + ytotal1, xtotal2 + ytotal2);
 
     drop(input);
     println!("{total1} {total2}");
