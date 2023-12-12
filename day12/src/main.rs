@@ -5,14 +5,14 @@ use util::*;
 
 const MAX_LENGTHS: usize = 64;
 
-fn calc<'a, 'b>(
-    mut broken: u128,
-    mut working: u128,
-    mut len: u32,
-    lengths: &'a [u32],
-    cache: &'b mut HashMap<(u128, u128, u32, &'a [u32]), u64>,
+fn calc(
+    broken: u128,
+    working: u128,
+    len: u32,
+    lengths: &[u32],
+    cache: &mut HashMap<(u16, u16), u64>,
 ) -> u64 {
-    if let Some(&r) = cache.get(&(broken, working, len, lengths)) {
+    if let Some(&r) = cache.get(&(len as u16, lengths.len() as u16)) {
         return r;
     }
 
@@ -25,18 +25,12 @@ fn calc<'a, 'b>(
             break 'r 0;
         }
 
+        if working & 1 == 1 {
+            break 'r calc(broken >> 1, working >> 1, len - 1, lengths, cache);
+        }
+
         let l = lengths[0];
         let m = (1_u128 << l) - 1;
-
-        while len >= l && working & 1 == 1 {
-            broken >>= 1;
-            working >>= 1;
-            len -= 1;
-        }
-
-        if len < l {
-            break 'r 0;
-        }
 
         let mut r = if working & m == 0 && broken & (m + 1) == 0 {
             calc(
@@ -56,7 +50,7 @@ fn calc<'a, 'b>(
 
         r
     };
-    cache.insert((broken, working, len, lengths), r);
+    cache.insert((len as u16, lengths.len() as u16), r);
     r
 }
 
@@ -66,6 +60,7 @@ fn main() -> Result<()> {
     let mut lengths = Vec::with_capacity(MAX_LENGTHS);
     let mut total1 = 0;
     let mut total2 = 0;
+    let mut cache = HashMap::with_capacity(5000);
     for l in input.lines() {
         let mut p = Parser::new(l);
         let mut broken = 0;
@@ -95,7 +90,8 @@ fn main() -> Result<()> {
             panic!();
         }
 
-        total1 += calc(broken, working, line_len, &lengths, &mut HashMap::new());
+        cache.clear();
+        total1 += calc(broken, working, line_len, &lengths, &mut cache);
         let mut broken2 = broken;
         let mut working2 = working;
         let lengths = lengths.repeat(5);
@@ -105,13 +101,7 @@ fn main() -> Result<()> {
             working2 |= working << i * (line_len + 1);
         }
 
-        total2 += calc(
-            broken2,
-            working2,
-            line_len * 5 + 4,
-            &lengths,
-            &mut HashMap::new(),
-        );
+        total2 += calc(broken2, working2, line_len * 5 + 4, &lengths, &mut cache);
     }
 
     drop(input);
