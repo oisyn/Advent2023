@@ -8,7 +8,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/target/debug/day10.exe",
+            "program": "${workspaceFolder}/target/debug/day13.exe",
             "args": [
                 "-e"
             ],
