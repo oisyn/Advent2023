@@ -1,16 +1,51 @@
 use anyhow::Result;
 use util::*;
 
+trait SpanEq: Default {
+    fn eq<'a, I: IntoIterator<Item = &'a u8>>(&mut self, a: I, b: I) -> bool;
+
+    fn find_mirror<'a, I, Item>(span: I, skip: Option<usize>) -> Option<usize>
+    where
+        I: Iterator<Item = Item> + ExactSizeIterator + DoubleEndedIterator + Clone,
+        Item: IntoIterator<Item = &'a u8> + Clone,
+    {
+        let skip = skip.unwrap_or(usize::MAX);
+
+        let mut iter = span.clone().enumerate();
+        let mut prev = iter.next().unwrap().1;
+        iter.find_map(move |(p, cur)| {
+            let prev = std::mem::replace(&mut prev, cur.clone());
+            let mut eq = Self::default();
+            if p != skip && eq.eq(cur, prev) {
+                if span
+                    .clone()
+                    .skip(p + 1)
+                    .zip(span.clone().take(p - 1).rev())
+                    .all(|(a, b)| eq.eq(a, b))
+                {
+                    return Some(p);
+                }
+            }
+            None
+        })
+    }
+}
+
+#[derive(Clone, Copy, Default, Debug)]
+struct RegularEq;
+
+impl SpanEq for RegularEq {
+    fn eq<'a, I: IntoIterator<Item = &'a u8>>(&mut self, a: I, b: I) -> bool {
+        a.into_iter().eq(b)
+    }
+}
+
 #[derive(Clone, Copy, Default, Debug)]
 #[repr(transparent)]
-struct Smudged(bool);
+struct SmudgedEq(bool);
 
-impl Smudged {
-    pub fn new() -> Self {
-        Self(false)
-    }
-
-    pub fn eq<'a, I: IntoIterator<Item = &'a u8>>(&mut self, a: I, b: I) -> bool {
+impl SpanEq for SmudgedEq {
+    fn eq<'a, I: IntoIterator<Item = &'a u8>>(&mut self, a: I, b: I) -> bool {
         let a = a.into_iter();
         let b = b.into_iter();
 
@@ -19,7 +54,7 @@ impl Smudged {
         }
 
         let mut zipped = a.zip(b);
-        if zipped.position(|(a, b)| a != b).is_some() {
+        if zipped.any(|(a, b)| a != b) {
             self.0 = true;
             zipped.all(|(a, b)| a == b)
         } else {
@@ -55,72 +90,20 @@ fn main() -> Result<()> {
         data = new_data;
 
         // part 1
-        let mut found_y = usize::MAX;
-        let mut found_x = usize::MAX;
-        'part1: {
-            for (y, r) in field.rows().enumerate().skip(1) {
-                if r == field.row(y - 1) {
-                    if field
-                        .rows()
-                        .skip(y + 1)
-                        .zip(field.rows().take(y - 1).rev())
-                        .all(|(a, b)| a == b)
-                    {
-                        found_y = y;
-                        total1 += y * 100;
-                        break 'part1;
-                    }
-                }
-            }
-
-            for (x, c) in field.cols().enumerate().skip(1) {
-                if c == field.col(x - 1) {
-                    if field
-                        .cols()
-                        .skip(x + 1)
-                        .zip(field.cols().take(x - 1).rev())
-                        .all(|(a, b)| a == b)
-                    {
-                        found_x = x;
-                        total1 += x;
-                        break 'part1;
-                    }
-                }
-            }
+        let mut found_y = None;
+        let mut found_x = None;
+        if let Some(y) = RegularEq::find_mirror(field.rows(), None) {
+            found_y = Some(y);
+            total1 += 100 * y;
+        } else if let Some(x) = RegularEq::find_mirror(field.cols(), None) {
+            found_x = Some(x);
+            total1 += x;
         }
 
-        for (y, r) in field.rows().enumerate().skip(1) {
-            if y == found_y {
-                continue;
-            }
-            let mut s = Smudged::new();
-            if s.eq(r, field.row(y - 1)) {
-                if field
-                    .rows()
-                    .skip(y + 1)
-                    .zip(field.rows().take(y - 1).rev())
-                    .all(|(a, b)| s.eq(a, b))
-                {
-                    total2 += y * 100;
-                }
-            }
-        }
-
-        for (x, c) in field.cols().enumerate().skip(1) {
-            if x == found_x {
-                continue;
-            }
-            let mut s = Smudged::new();
-            if s.eq(c, field.col(x - 1)) {
-                if field
-                    .cols()
-                    .skip(x + 1)
-                    .zip(field.cols().take(x - 1).rev())
-                    .all(|(a, b)| s.eq(a, b))
-                {
-                    total2 += x;
-                }
-            }
+        if let Some(y) = SmudgedEq::find_mirror(field.rows(), found_y) {
+            total2 += 100 * y;
+        } else if let Some(x) = SmudgedEq::find_mirror(field.cols(), found_x) {
+            total2 += x;
         }
     }
 
