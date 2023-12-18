@@ -11,3 +11,6 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 util.workspace = true
+
+[features]
+i128 = []

@@ -1,6 +1,14 @@
 use anyhow::Result;
 use util::*;
 
+#[cfg(feature = "i128")]
+#[allow(non_camel_case_types)]
+type itype = i128;
+
+#[cfg(not(feature = "i128"))]
+#[allow(non_camel_case_types)]
+type itype = i64;
+
 fn main() -> Result<()> {
     let input = open_input("day18")?;
 
@@ -24,7 +32,7 @@ fn main() -> Result<()> {
             _ => y1 -= n,
         }
 
-        let n = i64::from_str_radix(p.expect(" (#").take(5), 16).unwrap();
+        let n = itype::from_str_radix(p.expect(" (#").take(5), 16).unwrap();
         let c = p.take_char().unwrap();
         len2 += n;
 
