@@ -7,8 +7,8 @@ enum Color {
     Blue = 2,
 }
 
-impl FromParser for Color {
-    fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
+impl FromParser<'_> for Color {
+    fn parse_from(parser: &mut Parser) -> Option<Self> {
         match parser.peek_char() {
             Some(b'r') => {
                 parser.expect("red");

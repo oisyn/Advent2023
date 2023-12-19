@@ -77,6 +77,10 @@ impl<'a> Parser<'a> {
         self.take(len)
     }
 
+    pub fn peek_remainder(&mut self) -> &'a str {
+        to_str(&self.buf)
+    }
+
     pub fn remainder(&mut self) -> &'a str {
         let r = to_str(self.buf);
         self.buf = &self.buf[self.buf.len()..];
@@ -89,19 +93,19 @@ impl<'a> Parser<'a> {
         r
     }
 
-    pub fn parse<T: FromParser>(&mut self) -> Option<T> {
-        <T as FromParser>::parse_from(self)
+    pub fn parse<T: FromParser<'a>>(&mut self) -> Option<T> {
+        <T as FromParser<'a>>::parse_from(self)
     }
 }
 
-pub trait FromParser: Sized {
-    fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self>;
+pub trait FromParser<'p>: Sized + 'p {
+    fn parse_from(parser: &mut Parser<'p>) -> Option<Self>;
 }
 
 macro_rules! impl_uint_parser {
     ($t:ty) => {
-        impl FromParser for $t {
-            fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
+        impl FromParser<'_> for $t {
+            fn parse_from(parser: &mut Parser) -> Option<Self> {
                 parser.take_while(|c| c.is_ascii_digit()).parse().ok()
             }
         }
@@ -110,8 +114,8 @@ macro_rules! impl_uint_parser {
 
 macro_rules! impl_sint_parser {
     ($t:ty) => {
-        impl FromParser for $t {
-            fn parse_from<'a>(parser: &mut Parser<'a>) -> Option<Self> {
+        impl FromParser<'_> for $t {
+            fn parse_from(parser: &mut Parser) -> Option<Self> {
                 let neg = parser.peek_char()? == b'-';
                 if neg {
                     parser.skip(1);
