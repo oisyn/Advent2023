@@ -29,6 +29,13 @@ impl<'p> FromParser<'p> for Rule<'p> {
         } else if b == b'R' {
             return Some(Rule::Direct(Action::Reject));
         }
+        if {
+            let pc = p.peek_char().unwrap();
+            pc == b',' || pc == b'}'
+        } {
+            return Some(Rule::Direct(Action::Goto(n)));
+        }
+
         let b = b"xmas".iter().position(|&c| b == c)? as u8;
         let c = p.take_char()?;
         let num = p.parse::<u32>()?;
@@ -59,7 +66,7 @@ fn main() -> Result<()> {
 
         let mut rules = Vec::new();
         loop {
-            rules.push(p.parse::<Rule>().unwrap());
+            rules.push(p.parse::<Rule>().expect(l));
             if p.take_char().unwrap() == b'}' {
                 break;
             }
