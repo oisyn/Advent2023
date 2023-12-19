@@ -114,16 +114,14 @@ fn main() -> Result<()> {
     let mut total2 = 0;
 
     let mut queue = Vec::with_capacity(10000);
-    queue.push(([1..=4000, 1..=4000, 1..=4000, 1..=4000], Action::Goto("in")));
+    queue.push(([(1, 4000); 4], Action::Goto("in")));
     while !queue.is_empty() {
         let (mut part, mut action) = queue.pop().unwrap();
 
         loop {
             let workflow = match action {
                 Action::Accept => {
-                    total2 += part
-                        .iter()
-                        .fold(1_u64, |s, r| s * (r.end() - r.start() + 1) as u64);
+                    total2 += part.iter().fold(1_u64, |s, r| s * (r.1 - r.0 + 1) as u64);
                     break;
                 }
                 Action::Reject => break,
@@ -135,25 +133,25 @@ fn main() -> Result<()> {
                     match r {
                         Rule::Direct(a) => break 'action a,
                         Rule::Smaller(c, v, a) => {
-                            let r = part[c as usize].clone();
-                            if *r.end() < v {
+                            let r = part[c as usize];
+                            if r.1 < v {
                                 break 'action a;
-                            } else if *r.start() < v {
-                                let mut new_part = part.clone();
-                                new_part[c as usize] = *r.start()..=v - 1;
+                            } else if r.0 < v {
+                                let mut new_part = part;
+                                new_part[c as usize] = (r.0, v - 1);
                                 queue.push((new_part, a));
-                                part[c as usize] = v..=*r.end();
+                                part[c as usize] = (v, r.1);
                             }
                         }
                         Rule::Larger(c, v, a) => {
                             let r = part[c as usize].clone();
-                            if *r.start() > v {
+                            if r.0 > v {
                                 break 'action a;
-                            } else if *r.end() > v {
-                                let mut new_part = part.clone();
-                                new_part[c as usize] = v + 1..=*r.end();
+                            } else if r.1 > v {
+                                let mut new_part = part;
+                                new_part[c as usize] = (v + 1, r.1);
                                 queue.push((new_part, a));
-                                part[c as usize] = *r.start()..=v;
+                                part[c as usize] = (r.0, v);
                             }
                         }
                     }
