@@ -1,4 +1,4 @@
-use std::iter::StepBy;
+use std::{iter::StepBy, ops::Index};
 
 pub struct FieldView<'a, T> {
     data: &'a [T],
@@ -15,6 +15,18 @@ impl<'a, T> FieldView<'a, T> {
             height,
             stride,
         }
+    }
+
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    pub fn stride(&self) -> usize {
+        self.stride
     }
 
     pub fn offset(&self, x: usize, y: usize) -> usize {
@@ -54,6 +66,13 @@ impl<'a, T> FieldView<'a, T> {
 impl<'a, T> Clone for FieldView<'a, T> {
     fn clone(&self) -> Self {
         Self { ..*self }
+    }
+}
+
+impl<'a, T> Index<usize> for FieldView<'a, T> {
+    type Output = T;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
     }
 }
 

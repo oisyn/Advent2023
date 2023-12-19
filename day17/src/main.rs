@@ -3,10 +3,6 @@ use std::{cmp::Reverse, collections::BinaryHeap};
 use anyhow::Result;
 use util::*;
 
-fn is_nl(c: u8) -> bool {
-    c == b'\r' || c == b'\n'
-}
-
 fn main() -> Result<()> {
     let input = open_input("day17")?;
     let data = input.bytes();
