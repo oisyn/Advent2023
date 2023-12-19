@@ -59,8 +59,8 @@ fn main() -> Result<()> {
 
         let mut rules = Vec::new();
         loop {
-            rules.push(p.parse::<Rule>().expect(p.peek_remainder()));
-            if p.take_char().expect(p.peek_remainder()) == b'}' {
+            rules.push(p.parse::<Rule>().unwrap());
+            if p.take_char().unwrap() == b'}' {
                 break;
             }
         }
