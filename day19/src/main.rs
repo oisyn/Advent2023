@@ -3,12 +3,32 @@ use std::collections::HashMap;
 use anyhow::Result;
 use util::*;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 struct Rule<'a> {
     action: &'a str,
     t: u8,
     c: u8,
     v: u32,
+}
+
+impl<'a> std::fmt::Display for Rule<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.t == 0 {
+            write!(f, "{}", self.action)
+        } else {
+            write!(
+                f,
+                "{}{}{}:{}",
+                b"xmas"[self.c as usize] as char, self.t as char, self.v, self.action
+            )
+        }
+    }
+}
+
+impl<'a> std::fmt::Debug for Rule<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self, f)
+    }
 }
 
 impl<'a> Rule<'a> {
@@ -87,6 +107,10 @@ fn optimize(workflows: &mut HashMap<&str, Vec<Rule>>) {
             break;
         }
     }
+
+    // for (&name, rules) in workflows.iter_mut() {
+    //     println!("{name}{rules:?}");
+    // }
 }
 
 fn main() -> Result<()> {
