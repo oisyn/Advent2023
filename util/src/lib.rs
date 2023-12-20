@@ -15,6 +15,20 @@ pub fn is_nl(c: u8) -> bool {
     c == b'\r' || c == b'\n'
 }
 
+pub fn gcd<T>(mut n: T, mut m: T) -> T
+where
+    T: Copy + Default + Eq + Ord + std::ops::RemAssign<T>,
+{
+    let zero = Default::default();
+    while m != zero {
+        if m < n {
+            (n, m) = (m, n);
+        }
+        m %= n;
+    }
+    n
+}
+
 pub trait IncrementalIdentity {
     type Identity;
     fn increment() -> Self::Identity;

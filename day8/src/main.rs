@@ -18,16 +18,6 @@ fn node_name(id: u16) -> String {
     to_str(&b).to_string()
 }
 
-fn gcd(mut n: u64, mut m: u64) -> u64 {
-    while m != 0 {
-        if m < n {
-            (n, m) = (m, n);
-        }
-        m %= n;
-    }
-    n
-}
-
 fn main() -> Result<()> {
     let input = open_input("day8")?;
     let mut lines = input.lines();
