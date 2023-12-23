@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BinaryHeap, HashMap};
 
 use anyhow::Result;
 use util::*;
@@ -16,7 +16,10 @@ fn main() -> Result<()> {
         let x1 = p.expect("~").parse::<i32>().unwrap();
         let y1 = p.expect(",").parse::<i32>().unwrap();
         let z1 = p.expect(",").parse::<i32>().unwrap();
-        bricks.push(((x0, y0, z0), (x1, y1, z1)));
+        bricks.push((
+            (x0.min(x1), y0.min(y1), z0.min(z1)),
+            (x1.max(x0), y1.max(y0), z1.max(z0)),
+        ));
     }
 
     bricks.sort_unstable_by(|a, b| a.0 .2.cmp(&b.0 .2));
@@ -68,6 +71,7 @@ fn main() -> Result<()> {
                 supporting[i].push(idx);
             }
             resting[idx] = set.clone();
+            resting[idx].sort_unstable();
         }
 
         let h = max + b.1 .2 - b.0 .2 + 1;
@@ -78,65 +82,45 @@ fn main() -> Result<()> {
         }
     }
 
-    let mut falling = HashSet::with_capacity(2000);
-    let mut staying = HashSet::with_capacity(2000);
-    let mut falling_for_brick = vec![Vec::new(); bricks.len()];
-    let mut staying_for_brick = vec![Vec::new(); bricks.len()];
-    let mut queue = VecDeque::with_capacity(1000);
-    let mut total2 = 0;
+    let mut fall_at = vec![None; bricks.len()];
+    let mut num_falls = vec![0; bricks.len()];
 
-    for idx in (0..bricks.len()).rev() {
-        if safe[idx] {
+    let mut queue: BinaryHeap<usize> = BinaryHeap::with_capacity(100);
+
+    for idx in 0..bricks.len() {
+        if resting[idx].is_empty() {
             continue;
         }
 
-        falling.clear();
-        staying.clear();
-        falling.insert(idx);
         queue.clear();
-        queue.extend(&supporting[idx]);
-        while let Some(idx) = queue.pop_front() {
-            if falling.contains(&idx) {
-                continue;
+        queue.extend(&resting[idx]);
+
+        while let Some(i) = queue.pop() {
+            match queue.peek() {
+                Some(&j) if i == j => continue,
+                _ => {}
+            }
+            if queue.is_empty() {
+                fall_at[idx] = Some(i);
+                break;
             }
 
-            if resting[idx].iter().all(|i| falling.contains(i)) {
-                falling.insert(idx);
-
-                if !falling_for_brick[idx].is_empty() {
-                    falling.extend(&falling_for_brick[idx]);
-                    total2 += falling_for_brick[idx].len();
-                    queue.extend(&staying_for_brick[idx]);
-                } else {
-                    total2 += 1;
-                    queue.extend(&supporting[idx]);
-                }
-            } else {
-                staying.insert(idx);
-            }
-        }
-
-        for &i in &supporting[idx] {
-            if resting[i][0] == idx {
-                falling_for_brick[i] = Vec::new();
-                staying_for_brick[i] = Vec::new();
-            }
-        }
-
-        // let mut v = Vec::from_iter(falling.iter().copied());
-        // v.sort();
-        // for i in &v {
-        //     println!("  {i} falls");
-        // }
-
-        #[cfg(not(feature = "test"))]
-        {
-            falling_for_brick[idx].extend(&falling);
-            staying_for_brick[idx].extend(&staying);
+            let Some(j) = fall_at[i] else {
+                break;
+            };
+            queue.push(j);
         }
     }
 
+    for idx in (0..bricks.len()).rev() {
+        let Some(i) = fall_at[idx] else {
+            continue;
+        };
+        num_falls[i] += 1 + num_falls[idx];
+    }
+
     let total1 = safe.iter().filter(|&&b| b).count();
+    let total2 = num_falls.iter().sum::<usize>();
 
     drop(input);
     println!("{total1} {total2}");
