@@ -41,7 +41,6 @@ fn main() -> Result<()> {
     }
 
     let mut safe = vec![true; bricks.len()];
-    let mut supporting = vec![Vec::new(); bricks.len()];
     let mut resting = vec![Vec::new(); bricks.len()];
 
     let mut space: HashMap<(i32, i32), (i32, usize)> = HashMap::with_capacity(1000);
@@ -67,11 +66,8 @@ fn main() -> Result<()> {
             if set.len() == 1 {
                 safe[set[0]] = false;
             }
-            for &i in &set {
-                supporting[i].push(idx);
-            }
             resting[idx] = set.clone();
-            resting[idx].sort_unstable();
+            //resting[idx].sort_unstable();
         }
 
         let h = max + b.1 .2 - b.0 .2 + 1;
