@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BinaryHeap, HashMap};
 
 use anyhow::Result;
 use util::*;
@@ -113,24 +113,23 @@ fn main() -> Result<()> {
     drop(queue);
 
     fn find_longest(nodes: &Vec<Vec<(i32, i32)>>, start_id: i32, end_id: i32) -> i32 {
-        let mut queue = Vec::with_capacity(100);
+        let mut queue = BinaryHeap::with_capacity(100);
         let mut total = 0;
         let mut max_len_for = HashMap::with_capacity(10000);
-        queue.push((start_id, 0, 1_u64));
-        while let Some((start, path_len, done)) = queue.pop() {
+        queue.push((0, start_id, 1_u64));
+        while let Some((path_len, start, done)) = queue.pop() {
             for &(next, len) in &nodes[start as usize] {
                 let new_len = path_len + len;
+                if next == end_id {
+                    total = total.max(new_len);
+                    continue;
+                }
                 if done & (1 << next) == 0 {
-                    if next == end_id {
-                        total = total.max(new_len);
-                        continue;
-                    }
-
                     let new_done = done | (1 << next);
-                    let e = max_len_for.get_mut(&(next, new_done));
-                    if e.map_or(true, |n| *n < new_len) {
-                        max_len_for.insert((next, new_done), new_len);
-                        queue.push((next, new_len, done | (1 << next)));
+                    let e = max_len_for.entry((next, new_done)).or_default();
+                    if *e < new_len {
+                        *e = new_len;
+                        queue.push((new_len, next, new_done));
                     }
                 }
             }
