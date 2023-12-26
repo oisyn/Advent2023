@@ -57,7 +57,7 @@ fn main() -> Result<()> {
     const TARGET_RANGE: RangeInclusive<u16> = node_id("AAZ")..=node_id("ZZZ");
     let mut total2 = 1;
     for mut n in start_nodes {
-        let mut steps = 0;
+        let mut steps = 0_u64;
         for &p in path.iter().cycle() {
             steps += 1;
             let dir = (p == b'R') as usize;
