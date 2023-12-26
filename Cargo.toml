@@ -32,11 +32,13 @@ members = [
     "day22",
     "day23",
     "day24",
+    "day25",
     "util",
 ]
 
 [workspace.dependencies]
 anyhow = "1.0.75"
+bitvec = "*"
 memmap = "0.7.0"
 itertools = "*"
 util = { version = "0.1.0", path = "util" }
